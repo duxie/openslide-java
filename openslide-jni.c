@@ -22,7 +22,22 @@
 #include <jni.h>
 
 #include <openslide.h>
+#include <malloc.h>
+#include <windows.h>
 
+char* JStringToWindows(JNIEnv *env, jstring jstr){
+	jsize len = (*env)->GetStringLength(env,jstr);
+	const jchar *jcstr = (*env)->GetStringChars(env,jstr, NULL);
+	int size = 0;
+	char *str = (char *)malloc(len * 2 + 1);
+
+	if ((size = WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)jcstr, len, str, len * 2 + 1, NULL, NULL)) == 0)
+		return NULL;
+	(*env)->ReleaseStringChars(env,jstr, jcstr);
+	str[size] = 0;
+	return str;
+
+}
 
 static jstring osj_detect_vendor(JNIEnv *env, jobject obj, jstring filename) {
   const char *filename2 = (*env)->GetStringUTFChars(env, filename, NULL);
@@ -41,15 +56,15 @@ static jstring osj_detect_vendor(JNIEnv *env, jobject obj, jstring filename) {
 }
 
 static jlong osj_open(JNIEnv *env, jobject obj, jstring filename) {
-  const char *filename2 = (*env)->GetStringUTFChars(env, filename, NULL);
+  const char *filename2 = JStringToWindows(env, filename);
+
   if (filename2 == NULL) {
     return 0;
   }
 
   openslide_t *osr = openslide_open(filename2);
 
-  (*env)->ReleaseStringUTFChars(env, filename, filename2);
-
+  filename2 = NULL;
   return (jlong) osr;
 }
 
