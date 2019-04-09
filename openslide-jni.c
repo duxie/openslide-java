@@ -40,7 +40,7 @@ char* JStringToWindows(JNIEnv *env, jstring jstr){
 }
 
 static jstring osj_detect_vendor(JNIEnv *env, jobject obj, jstring filename) {
-  const char *filename2 = (*env)->GetStringUTFChars(env, filename, NULL);
+  const char *filename2 = JStringToWindows(env, filename);
   if (filename2 == NULL) {
     return NULL;
   }
